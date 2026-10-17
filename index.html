@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caro Online - Đấu Trí Giải Trí</title>
+    
+    <!-- Tailwind CSS (Giao diện) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google AdSense SDK chính thức -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9299134066038589" crossorigin="anonymous"></script>
+
+    <style>
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(15, minmax(0, 1fr));
+            gap: 1px;
+            background-color: #334155;
+            border: 3px solid #1e293b;
+            border-radius: 8px;
+        }
+        .cell {
+            aspect-ratio: 1;
+            background-color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.15rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.1s ease;
+        }
+        .cell:hover {
+            background-color: #1e293b;
+        }
+        .cell.x { 
+            color: #38bdf8; 
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); 
+        }
+        .cell.o { 
+            color: #f43f5e; 
+            text-shadow: 0 0 10px rgba(244, 63, 94, 0.5); 
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-4 shadow-xl sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-lg md:text-xl font-black text-yellow-400 tracking-wide flex items-center gap-2">
+                🎮 CARO ONLINE
+            </h1>
+            <span class="text-xs text-slate-400 font-medium">Giải trí đỉnh cao</span>
+        </div>
+    </header>
+
+    <!-- Main Area -->
+    <main class="max-w-4xl mx-auto p-4 w-full flex-grow flex flex-col items-center justify-center">
+        
+        <!-- Quảng cáo Top Banner -->
+        <div class="w-full max-w-xl my-3 text-center min-h-[90px] bg-slate-900/40 rounded-xl border border-slate-900 overflow-hidden">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-9299134066038589"
+                 data-ad-slot="auto"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+
+        <!-- Màn hình Menu Chọn Chế Độ Chơi -->
+        <div id="menu-screen" class="w-full max-w-md bg-slate-900/90 backdrop-blur-md p-6 md:p-8 rounded-3xl border border-slate-800 shadow-2xl text-center">
+            <h2 class="text-2xl font-black mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500">
+                Chọn Chế Độ Trận Đấu
+            </h2>
+            
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-2 font-bold uppercase tracking-wider">Cấp Độ Đấu Máy (AI):</label>
+                    <select id="difficulty" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-semibold focus:outline-none focus:border-yellow-400 transition">
+                        <option value="easy">🌱 Dễ (Nhập môn)</option>
+                        <option value="medium">⚡ Trung Bình (Thách thức)</option>
+                        <option value="hard">🔥 Khó (Cao thủ)</option>
+                    </select>
+                </div>
+
+                <button onclick="startGame('vsAI')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-900/30 transition transform active:scale-95 flex items-center justify-center gap-2">
+                    🤖 Đấu Với Máy (Solo AI)
+                </button>
+                <button onclick="startGame('vsPlayer')" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-purple-900/30 transition transform active:scale-95 flex items-center justify-center gap-2">
+                    👥 Đấu 2 Người (Trên 1 Máy)
+                </button>
+            </div>
+        </div>
+
+        <!-- Màn hình Trò Chơi Caro -->
+        <div id="game-screen" class="hidden w-full flex flex-col items-center">
+            <div class="flex justify-between w-full max-w-xl mb-4 items-center bg-slate-900/80 p-3 rounded-2xl border border-slate-800 shadow-lg">
+                <button onclick="backToMenu()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow">
+                    ⬅ Menu
+                </button>
+                <div id="game-status" class="text-xs md:text-sm font-extrabold text-yellow-400">Lượt đi: Bạn (X)</div>
+            </div>
+
+            <!-- Bàn cờ Caro 15x15 -->
+            <div id="board" class="board-grid w-full max-w-xl shadow-2xl"></div>
+        </div>
+
+        <!-- Quảng cáo Bottom Banner -->
+        <div class="w-full max-w-xl my-4 text-center min-h-[90px] bg-slate-900/40 rounded-xl border border-slate-900 overflow-hidden">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-9299134066038589"
+                 data-ad-slot="auto"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-xs text-slate-600 border-t border-slate-900/80">
+        Caro Game Online • Powered by GitHub Pages
+    </footer>
+
+    <!-- Logic Trò Chơi -->
+    <script>
+        const BOARD_SIZE = 15;
+        let board = [];
+        let currentPlayer = 'X';
+        let gameActive = false;
+        let gameMode = 'vsAI';
+        let difficulty = 'easy';
+
+        function startGame(mode) {
+            gameMode = mode;
+            difficulty = document.getElementById('difficulty').value;
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            initBoard();
+        }
+
+        function backToMenu() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+            gameActive = false;
+        }
+
+        function initBoard() {
+            board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(''));
+            currentPlayer = 'X';
+            gameActive = true;
+            document.getElementById('game-status').innerText = "Lượt đi: Bạn (X)";
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+            for(let r = 0; r < BOARD_SIZE; r++) {
+                for(let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${board[r][c].toLowerCase()}`;
+                    cell.innerText = board[r][c];
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.addEventListener('click', handleCellClick);
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(e) {
+            if (!gameActive) return;
+            const r = parseInt(e.target.dataset.row);
+            const c = parseInt(e.target.dataset.col);
+
+            if (board[r][c] !== '') return;
+
+            makeMove(r, c);
+
+            if (gameActive && gameMode === 'vsAI' && currentPlayer === 'O') {
+                setTimeout(aiMove, 200);
+            }
+        }
+
+        function makeMove(r, c) {
+            board[r][c] = currentPlayer;
+            renderBoard();
+
+            if (checkWin(r, c, currentPlayer)) {
+                gameActive = false;
+                if (gameMode === 'vsAI') {
+                    if (currentPlayer === 'X') {
+                        alert(`🎉 Chúc mừng bạn đã chiến thắng máy cấp độ [${difficulty.toUpperCase()}]!`);
+                    } else {
+                        alert("🤖 Máy đã giành chiến thắng! Hãy thử lại ván mới nhé.");
+                    }
+                } else {
+                    alert(`🏆 Người chơi [Quân ${currentPlayer}] đã giành chiến thắng!`);
+                }
+                return;
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            let statusText = `Lượt đi: Quân ${currentPlayer}`;
+            if (gameMode === 'vsAI') {
+                statusText = currentPlayer === 'X' ? "Lượt đi: Bạn (X)" : "Lượt đi: Máy đang nghĩ (O)...";
+            }
+            document.getElementById('game-status').innerText = statusText;
+        }
+
+        function checkWin(r, c, player) {
+            const directions = [
+                {dr: 0, dc: 1},   // Ngang
+                {dr: 1, dc: 0},   // Dọc
+                {dr: 1, dc: 1},   // Chéo chính
+                {dr: 1, dc: -1}   // Chéo phụ
+            ];
+
+            for (let dir of directions) {
+                let count = 1;
+                let i = 1;
+                while(r + dir.dr * i >= 0 && r + dir.dr * i < BOARD_SIZE && c + dir.dc * i >= 0 && c + dir.dc * i < BOARD_SIZE && board[r + dir.dr * i][c + dir.dc * i] === player) {
+                    count++;
+                    i++;
+                }
+                i = 1;
+                while(r - dir.dr * i >= 0 && r - dir.dr * i < BOARD_SIZE && c - dir.dc * i >= 0 && c - dir.dc * i < BOARD_SIZE && board[r - dir.dr * i][c - dir.dc * i] === player) {
+                    count++;
+                    i++;
+                }
+                if (count >= 5) return true;
+            }
+            return false;
+        }
+
+        function aiMove() {
+            if (!gameActive) return;
+            let emptyCells = [];
+            for(let r = 0; r < BOARD_SIZE; r++) {
+                for(let c = 0; c < BOARD_SIZE; c++) {
+                    if(board[r][c] === '') emptyCells.push({r, c});
+                }
+            }
+            if (emptyCells.length === 0) return;
+
+            let chosenCell = null;
+            if (difficulty === 'easy') {
+                chosenCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            } else {
+                chosenCell = findBestMove(difficulty === 'hard');
+            }
+
+            if (chosenCell) {
+                makeMove(chosenCell.r, chosenCell.c);
+            }
+        }
+
+        function findBestMove(isHard) {
+            for(let r=0; r<BOARD_SIZE; r++) {
+                for(let c=0; c<BOARD_SIZE; c++) {
+                    if(board[r][c] === '') {
+                        board[r][c] = 'O';
+                        if(checkWin(r, c, 'O')) { board[r][c] = ''; return {r, c}; }
+                        board[r][c] = '';
+                    }
+                }
+            }
+
+            for(let r=0; r<BOARD_SIZE; r++) {
+                for(let c=0; c<BOARD_SIZE; c++) {
+                    if(board[r][c] === '') {
+                        board[r][c] = 'X';
+                        if(checkWin(r, c, 'X')) { board[r][c] = ''; return {r, c}; }
+                        board[r][c] = '';
+                    }
+                }
+            }
+
+            if (isHard) {
+                let adjacentCells = [];
+                for(let r=0; r<BOARD_SIZE; r++) {
+                    for(let c=0; c<BOARD_SIZE; c++) {
+                        if(board[r][c] !== '') {
+                            for(let dr=-2; dr<=2; dr++) {
+                                for(let dc=-2; dc<=2; dc++) {
+                                    let nr = r + dr, nc = c + dc;
+                                    if(nr>=0 && nr<BOARD_SIZE && nc>=0 && nc<BOARD_SIZE && board[nr][nc] === '') {
+                                        adjacentCells.push({r: nr, c: nc});
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if(adjacentCells.length > 0) {
+                    return adjacentCells[Math.floor(Math.random() * adjacentCells.length)];
+                }
+            }
+
+            let emptyCells = [];
+            for(let r = 0; r < BOARD_SIZE; r++) {
+                for(let c = 0; c < BOARD_SIZE; c++) {
+                    if(board[r][c] === '') emptyCells.push({r, c});
+                }
+            }
+            return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        }
+    </script>
+</body>
+</html>
